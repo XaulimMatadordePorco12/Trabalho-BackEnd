@@ -1,11 +1,11 @@
 import {Router} from 'express'
 
 import carrinhoController from '../carrinho/carrinho.controller.js'
-import produtosController from '../livros/livros.controller.js'
+import LivrosController from '../livros/livros.controller.js'
 
 const rotas = Router()
-rotas.post('/produtos',produtosController.adicionar)
-rotas.get('/produtos',produtosController.listar)
+rotas.post('/livros',LivrosController.adicionar)
+rotas.get('/livros',LivrosController.listar)
 
 rotas.post('/adicionarItem',carrinhoController.adicionarItem)
 rotas.post('/removerItem',carrinhoController.removerItem)
