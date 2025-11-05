@@ -85,8 +85,19 @@ class CarrinhoController {
         return res.status(200).json(carrinho);
     } 
     //removerItem
-    async removerItem(req:Request, res:Response) {
-        const { usuarioId, produtoId } = req.body;
+    async removerItem(req:AutenticacaoRequest, res:Response) {
+        // Usuário é obtido a partir do middleware de autenticação
+        // ou pode ser passado no body (compatibilidade com front antigo)
+        const usuarioId = req.usuarioId || (req.body && req.body.usuarioId);
+        const { produtoId } = req.body;
+
+        if (!usuarioId) {
+            return res.status(401).json({ mensagem: "Usuário inválido!" });
+        }
+        if (!produtoId || typeof produtoId !== 'string') {
+            return res.status(400).json({ mensagem: "produtoId é obrigatório" });
+        }
+
         const carrinho = await db.collection<Carrinho>("carrinhos").findOne({ usuarioId: usuarioId });
         if (!carrinho) {
             return res.status(404).json({ mensagem: "Carrinho não encontrado" });
