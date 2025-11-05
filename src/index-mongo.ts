@@ -4,6 +4,8 @@ import rotasNaoAutenticadas from './rotas/rotas-nao-autenticadas.js'
 import rotasAutenticadas from './rotas/rotas-autenticadas.js'
 import Auth from './middlewares/auth.js'
 import cors from 'cors'
+
+console.log(process.env.MONGO_URI)
 const app = express()
 app.use(cors())
 

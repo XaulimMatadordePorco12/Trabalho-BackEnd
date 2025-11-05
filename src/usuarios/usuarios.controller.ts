@@ -71,8 +71,9 @@ class UsuariosController {
 
         if (!senhaValida) return res.status(401).json({ mensagem: "Usuário ou senha incorretos!" }) 
 
-        const token = jwt.sign({ usuarioId: usuario._id, tipo: usuario.tipo }, process.env.JWT_SECRET!, { expiresIn: '1h' }) 
-        res.status(200).json({ token: token })
+        const token = jwt.sign({ usuarioId: usuario._id, tipo: usuario.tipo }, process.env.JWT_SECRET!, { expiresIn: '1h' })
+        // Retornar também o tipo e o id do usuário facilita o frontend
+        res.status(200).json({ token: token, tipo: usuario.tipo, usuarioId: usuario._id?.toString?.() || usuario._id })
     }
 }
 
