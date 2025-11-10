@@ -164,5 +164,27 @@ class CarrinhoController {
         }
         return res.status(200).json({ mensagem: "Carrinho removido com sucesso" });
     }
+    
+    async atualizarProduto(req: Request, res: Response) {
+  const { id } = req.params;
+  const { nome, preco, categoria } = req.body;
+
+  try {
+    const resultado = await db.collection("livros").updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { nome, preco, categoria } }
+    );
+
+    if (resultado.modifiedCount === 0) {
+      return res.status(404).json({ mensagem: "Produto não encontrado ou sem alterações" });
+    }
+
+    return res.status(200).json({ mensagem: "Produto atualizado com sucesso!" });
+  } catch (erro) {
+    console.error("Erro ao atualizar produto:", erro);
+    return res.status(500).json({ mensagem: "Erro ao atualizar produto" });
+  }
 }
+}
+
 export default new CarrinhoController();
