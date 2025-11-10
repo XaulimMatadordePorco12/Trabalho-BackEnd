@@ -45,8 +45,8 @@ class AdminController {
                             { $unwind: "$itens" }, 
                             { 
                                 $group: { 
-                                    _id: "$itens.id", // Agrupa pelo ID do livro
-                                    // Pega o título (assumindo que está salvo no item)
+                                    _id: "$itens.livroId", // Agrupa pelo ID do livro
+                                    // Pega o título (Issumindo que está salvo no item)
                                     titulo: { $first: "$itens.titulo" }, 
                                     // Soma as quantidades vendidas desse item
                                     totalVendido: { $sum: "$itens.quantidade" }
@@ -75,7 +75,19 @@ class AdminController {
         }
     }
 
+    async listarUsuarios(req: Request, res: Response) {
+        try {
+            const usuarios = await db.collection('usuarios').find().toArray()
+            const usuariosSemSenha = usuarios.map(({ senha, ...resto }) => ({ ...resto }))
+            return res.status(200).json(usuariosSemSenha)
+        } catch (error) {
+            console.error('Erro ao listar usuários (Admin):', error)
+            return res.status(500).json({ mensagem: 'Erro interno do servidor.' })
+        }
+    }
+
     // (Espaço para C1, C3, C4... que podem ser adicionados aqui depois)
+
 
 }
 

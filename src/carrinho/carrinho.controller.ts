@@ -119,20 +119,36 @@ class CarrinhoController {
         return res.status(200).json(carrinho);
     }
     //atualizarQuantidade
-    async atualizarQuantidade(req:Request, res:Response) {
-        const { usuarioId, produtoId, quantidade } = req.body;
-        const carrinho = await db.collection<Carrinho>("carrinhos").findOne({ usuarioId: usuarioId });
+    async atualizarQuantidade(req:AutenticacaoRequest, res:Response) {
+        console.log("Atualizando quantidade - body:", req.body);
+        const { produtoId, quantidade } = req.body;
+        
+        if (!req.usuarioId) {
+            return res.status(401).json({ mensagem: "Usuário inválido!" });
+        }
+        const usuarioId = req.usuarioId;
+
+        if (!produtoId) {
+            return res.status(400).json({ mensagem: "produtoId é obrigatório" });
+        }
+
+        // Converter quantidade para número
+        const qtd = typeof quantidade === 'number' ? quantidade : parseInt(quantidade);
+        if (isNaN(qtd) || qtd <= 0) {
+            return res.status(400).json({ mensagem: "Quantidade deve ser um número maior que zero" });
+        }
+
+        const carrinho = await db.collection<Carrinho>("carrinhos").findOne({ usuarioId });
         if (!carrinho) {
             return res.status(404).json({ mensagem: "Carrinho não encontrado" });
         }
+
         const item = carrinho.itens.find(item => item.produtoId === produtoId);
         if (!item) {
             return res.status(404).json({ mensagem: "Item não encontrado no carrinho" });
         }
-        if (quantidade <= 0) {
-            return res.status(400).json({ mensagem: "Quantidade deve ser maior que zero" });
-        }
-        item.quantidade = quantidade;
+
+        item.quantidade = qtd;
         // Recalcular o total do carrinho
         const total = carrinho.itens.reduce((acc, item) => acc + (item.precoUnitario * item.quantidade), 0);
         carrinho.total = total;

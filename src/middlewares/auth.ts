@@ -33,7 +33,9 @@ function Auth(req: AutenticacaoRequest, res: Response, next: NextFunction) {
 }
 
 function checkAdmin(req: AutenticacaoRequest, res: Response, next: NextFunction) {
-    if (req.usuarioTipo === 'admin') {
+    // Aceita 'admin' em qualquer capitalização (ex: 'admin', 'ADMIN', 'Admin')
+    const tipo = (req.usuarioTipo || '').toString().toLowerCase();
+    if (tipo === 'admin') {
         next();
     } else {
         return res.status(403).json({ mensagem: "Acesso negado. Rota restrita a administradores." });
