@@ -16,6 +16,7 @@ rotas.post('/removerItem', Auth, carrinhoController.removerItem)
 rotas.post('/atualizarQuantidade', Auth, carrinhoController.atualizarQuantidade)
 rotas.get('/carrinho/:usuarioId', Auth, carrinhoController.listar)
 rotas.delete('/carrinho/:usuarioId', Auth, carrinhoController.remover)
+rotas.put('/carrinho/item/:id', carrinhoController.atualizarItemCarrinho)
 
 
 rotas.get('/admin/estatisticas', [Auth, checkAdmin], adminController.getEstatisticas)

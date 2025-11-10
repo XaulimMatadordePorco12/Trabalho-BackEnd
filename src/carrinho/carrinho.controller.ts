@@ -181,24 +181,29 @@ class CarrinhoController {
         return res.status(200).json({ mensagem: "Carrinho removido com sucesso" });
     }
     
-    async atualizarProduto(req: Request, res: Response) {
-  const { id } = req.params;
-  const { nome, preco, categoria } = req.body;
+    async atualizarItemCarrinho(req: Request, res: Response) {
+  const { id } = req.params; // id do item no carrinho
+  const { quantidade, precoUnitario } = req.body;
 
   try {
-    const resultado = await db.collection("livros").updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { nome, preco, categoria } }
+    const resultado = await db.collection("carrinhos").updateOne(
+  { "itens.produtoId": id },
+      {
+        $set: {
+          "itens.$.quantidade": quantidade,
+          "itens.$.precoUnitario": precoUnitario,
+        },
+      }
     );
 
     if (resultado.modifiedCount === 0) {
-      return res.status(404).json({ mensagem: "Produto não encontrado ou sem alterações" });
+      return res.status(404).json({ mensagem: "Item não encontrado ou sem alterações" });
     }
 
-    return res.status(200).json({ mensagem: "Produto atualizado com sucesso!" });
+    return res.status(200).json({ mensagem: "Item do carrinho atualizado com sucesso!" });
   } catch (erro) {
-    console.error("Erro ao atualizar produto:", erro);
-    return res.status(500).json({ mensagem: "Erro ao atualizar produto" });
+    console.error("Erro ao atualizar item do carrinho:", erro);
+    return res.status(500).json({ mensagem: "Erro ao atualizar item do carrinho" });
   }
 }
 }
