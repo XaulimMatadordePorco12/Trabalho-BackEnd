@@ -23,13 +23,14 @@ class CarrinhoController {
     //adicionarItem
     async adicionarItem(req:AutenticacaoRequest, res:Response) {
         console.log("Chegou na rota de adicionar item ao carrinho");
-        const { produtoId, quantidade } = req.body;
+        const { LivroId, quantidade } = req.body;
         if(!req.usuarioId)
             return res.status(401).json({mensagem:"Usuário inválido!"})
         const usuarioId = req.usuarioId 
         //Buscar o produto no banco de dados
-        const produto = await db.collection("produtos").findOne({ _id: ObjectId.createFromHexString(produtoId)});
+        const produto = await db.collection("livros").findOne({ _id: ObjectId.createFromHexString(LivroId)});
         if (!produto) {
+            console.log("Produto não encontrado para o ID:", LivroId);
             return res.status(400).json({ mensagem: "Produto não encontrado" });
         }
         //Pegar o preço do produto
@@ -44,7 +45,7 @@ class CarrinhoController {
             const novoCarrinho: Carrinho = {
                 usuarioId: usuarioId,
                 itens: [{
-                    produtoId: produtoId,
+                    produtoId: LivroId,
                     quantidade: quantidade,
                     precoUnitario: precoUnitario,
                     nome: nome
@@ -56,14 +57,14 @@ class CarrinhoController {
             return res.status(201).json(novoCarrinho);
         }
         // Se existir, deve adicionar o item ao carrinho existente
-        const itemExistente = carrinho.itens.find(item => item.produtoId === produtoId);
+        const itemExistente = carrinho.itens.find(item => item.produtoId === LivroId);
         if (itemExistente) {
             // Se o item já existir no carrinho, atualizar a quantidade
             itemExistente.quantidade += quantidade;
         } else {
             // Se o item não existir, adicionar ao carrinho
             carrinho.itens.push({
-                produtoId: produtoId,
+                produtoId: LivroId,
                 quantidade: quantidade,
                 precoUnitario: precoUnitario,
                 nome: nome
