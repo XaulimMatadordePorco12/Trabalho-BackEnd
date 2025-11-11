@@ -6,54 +6,79 @@ class AdminController {
 
     async getEstatisticas(req: Request, res: Response) {
         try {
-            // Usamos $facet para rodar múltiplas agregações (pipelines) de uma só vez
-            // na coleção 'carrinhos'.
+            console.log('📊 Gerando estatísticas...');
+
             const [estatisticas] = await db.collection('carrinhos').aggregate([
                 {
                     $facet: {
-                        // Pipeline 1: Para "Carrinhos Ativos" e "Valor Total"
+                        // Pipeline 1: DADOS GERAIS (Simples e eficiente)
                         "dadosGerais": [
-                            { $unwind: "$itens" }, // Desmembra o array de itens
+                            // Garante que apenas carrinhos com itens sejam contados
+                            { $match: { "itens.0": { $exists: true } } }, 
+                            { $unwind: "$itens" }, 
                             {
                                 $project: {
-                                    usuarioId: 1, // Mantém o ID do usuário
-                                    // Calcula o subtotal de CADA item
+                                    usuarioId: 1, 
                                     itemTotal: { $multiply: ["$itens.precoUnitario", "$itens.quantidade"] }
                                 }
                             },
                             {
                                 $group: {
                                     _id: null,
-                                    // Soma o subtotal de todos os itens de todos os carrinhos
                                     valorTotalGeral: { $sum: "$itemTotal" },
-                                    // Cria um "set" (lista sem duplicatas) de todos os usuários que têm carrinho
-                                    usuariosComCarrinho: { $addToSet: "$usuarioId" }
+                                    carrinhosAtivos: { $addToSet: "$usuarioId" }
                                 }
                             },
                             {
                                 $project: {
                                     _id: 0,
-                                    valorTotalGeral: 1,
-                                    // Conta o tamanho do "set" para saber a qtd de carrinhos ativos
-                                    carrinhosAtivos: { $size: "$usuariosComCarrinho" }
+                                    carrinhosAtivos: { $size: "$carrinhosAtivos" },
+                                    valorTotalGeral: 1
                                 }
                             }
                         ],
-
-                        
+                        // Pipeline 2: RANKING DE ITENS (Lookup corrigido para tipo de ID)
                         "rankingItens": [
-                            { $unwind: "$itens" }, 
-                            { 
-                                $group: { 
-                                    _id: "$itens.livroId", // Agrupa pelo ID do livro
-                                    // Pega o título (Issumindo que está salvo no item)
-                                    titulo: { $first: "$itens.titulo" }, 
-                                    // Soma as quantidades vendidas desse item
+                            { $match: { "itens.0": { $exists: true } } },
+                            { $unwind: "$itens" },
+                            // 🔥 CORREÇÃO CRÍTICA: Converter a string do produtoId para ObjectId
+                            {
+                                $addFields: {
+                                    livroObjectId: {
+                                        $convert: {
+                                            input: "$itens.produtoId",
+                                            to: "objectId",
+                                            onError: null,
+                                            onNull: null
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                $lookup: {
+                                    from: "livros",
+                                    // Agora o localField é o ObjectId convertido
+                                    localField: "livroObjectId", 
+                                    foreignField: "_id",
+                                    as: "livroInfo"
+                                }
+                            },
+                            // Filtro que agora funciona, pois o lookup deve encontrar correspondências
+                            { $match: { "livroInfo": { $ne: [] } } }, 
+                            {
+                                $group: {
+                                    _id: "$itens.produtoId",
+                                    // Pega o título do primeiro elemento do array livroInfo
+                                    titulo: { 
+                                        $first: { 
+                                            $arrayElemAt: ["$livroInfo.titulo", 0] 
+                                        } 
+                                    }, 
                                     totalVendido: { $sum: "$itens.quantidade" }
                                 } 
                             },
-                            { $sort: { totalVendido: -1 } }, // Ordena do maior para o menor
-                            { $limit: 10 } // Retorna o Top 10
+                            { $sort: { totalVendido: -1 } },
+                            { $limit: 10 }
                         ]
                     }
                 }
@@ -61,7 +86,6 @@ class AdminController {
 
             // Formata a resposta
             const resposta = {
-                // Se 'dadosGerais' estiver vazio, retorna 0
                 carrinhosAtivos: estatisticas?.dadosGerais[0]?.carrinhosAtivos || 0,
                 valorTotalGeral: estatisticas?.dadosGerais[0]?.valorTotalGeral || 0,
                 rankingItens: estatisticas?.rankingItens || []
@@ -70,7 +94,7 @@ class AdminController {
             res.status(200).json(resposta);
 
         } catch (error) {
-            console.error("Erro ao gerar estatísticas (C2):", error);
+            console.error("Erro ao gerar estatísticas:", error);
             res.status(500).json({ mensagem: "Erro interno do servidor." });
         }
     }
@@ -85,10 +109,6 @@ class AdminController {
             return res.status(500).json({ mensagem: 'Erro interno do servidor.' })
         }
     }
-
-
-
-
 }
 
 export default new AdminController()
