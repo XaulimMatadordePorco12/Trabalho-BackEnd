@@ -8,6 +8,8 @@ import adminController from '../admin/admin.controller.js'
 const rotas = Router()
 rotas.post('/livros',[Auth, checkAdmin],LivrosController.adicionar)
 rotas.get('/livros',Auth,LivrosController.listar)
+rotas.put('/livros/:id', [Auth, checkAdmin], LivrosController.editar) // NOVA ROTA: Atualizar livro por ID
+rotas.delete('/livros/:id', [Auth, checkAdmin], LivrosController.remover) // NOVA ROTA: Remover livro por ID
 
 
 
