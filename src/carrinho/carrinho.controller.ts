@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-//import aqui as dependências necessárias
 import { ObjectId } from "bson";
 import { db } from "../database/banco-mongo.js";
 
