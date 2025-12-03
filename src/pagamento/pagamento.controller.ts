@@ -28,7 +28,6 @@ class PagamentoController {
         return res.status(400).json({ mensagem: "Total do carrinho inválido." });
       }
 
-
       const amountInCents = Math.round(totalNumber * 100);
 
       const paymentIntent = await stripe.paymentIntents.create({
