@@ -12,7 +12,7 @@ rotas.get('/livros',Auth,LivrosController.listar)
 rotas.put('/livros/:id', [Auth, checkAdmin], LivrosController.editar) 
 rotas.delete('/livros/:id', [Auth, checkAdmin], LivrosController.remover) 
 
-rotas.post('/pagamento/cartao', Auth, PagamentoController.criarPagamentoCartao)
+rotas.post('/pagamento/checkout-session', Auth, PagamentoController.criarSessaoCheckout)
 
 
 rotas.post('/adicionarItem', Auth, carrinhoController.adicionarItem)
