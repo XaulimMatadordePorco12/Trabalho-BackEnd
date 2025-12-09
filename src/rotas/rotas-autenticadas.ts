@@ -4,7 +4,6 @@ import { Auth, checkAdmin } from '../middlewares/auth.js'
 import carrinhoController from '../carrinho/carrinho.controller.js'
 import LivrosController from '../livros/livros.controller.js'
 import adminController from '../admin/admin.controller.js'
-import PagamentoController from '../pagamento/pagamento.controller.js'
 
 const rotas = Router()
 rotas.post('/livros',[Auth, checkAdmin],LivrosController.adicionar)
@@ -12,7 +11,6 @@ rotas.get('/livros',Auth,LivrosController.listar)
 rotas.put('/livros/:id', [Auth, checkAdmin], LivrosController.editar) 
 rotas.delete('/livros/:id', [Auth, checkAdmin], LivrosController.remover) 
 
-rotas.post('/pagamento/cartao', Auth, PagamentoController.criarPagamentoCartao)
 
 
 rotas.post('/adicionarItem', Auth, carrinhoController.adicionarItem)
