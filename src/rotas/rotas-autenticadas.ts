@@ -4,6 +4,7 @@ import { Auth, checkAdmin } from '../middlewares/auth.js'
 import carrinhoController from '../carrinho/carrinho.controller.js'
 import LivrosController from '../livros/livros.controller.js'
 import adminController from '../admin/admin.controller.js'
+import pagamentoController from '../pagamento/pagamento.controller.js';
 
 const rotas = Router()
 rotas.post('/livros',[Auth, checkAdmin],LivrosController.adicionar)
@@ -23,5 +24,7 @@ rotas.put('/carrinho/item/:id', carrinhoController.atualizarItemCarrinho)
 
 rotas.get('/admin/estatisticas', [Auth, checkAdmin], adminController.getEstatisticas)
 rotas.get('/admin/usuarios', [Auth, checkAdmin], adminController.listarUsuarios)
+
+rotas.post('/criar-pagamento-cartao', Auth, pagamentoController.criarIntencaoPagamento);
 
 export default rotas

@@ -7,6 +7,7 @@ interface ItemCarrinho {
     quantidade: number;
     precoUnitario: number;
     nome: string;
+    capaUrl?: string; // <--- ADICIONE ISSO (Define que o item pode ter uma capa)
 }
 
 interface Carrinho {
@@ -18,6 +19,7 @@ interface Carrinho {
 interface AutenticacaoRequest extends Request {
     usuarioId?:string;
 }
+
 class CarrinhoController {
     //adicionarItem
     async adicionarItem(req:AutenticacaoRequest, res:Response) {
@@ -26,19 +28,23 @@ class CarrinhoController {
         if(!req.usuarioId)
             return res.status(401).json({mensagem:"Usuário inválido!"})
         const usuarioId = req.usuarioId 
+        
         //Buscar o produto no banco de dados
         const produto = await db.collection("livros").findOne({ _id: ObjectId.createFromHexString(LivroId)});
         if (!produto) {
             console.log("Produto não encontrado para o ID:", LivroId);
             return res.status(400).json({ mensagem: "Produto não encontrado" });
         }
+        
         //Pegar o preço do produto
         //Pegar o nome do produto
-        const precoUnitario = produto.preco; // Supondo que o produto tenha um campo 'preco'
-        const nome = produto.nome; // Supondo que o produto tenha um campo 'nome'
+        const precoUnitario = produto.preco; 
+        const nome = produto.nome || produto.titulo; // Garante pegar nome ou titulo
+        const capaUrl = produto.capaUrl; // <--- ADICIONE ISSO (Pega a url da capa do livro)
         
         const carrinho = await db.collection<Carrinho>("carrinhos").findOne({ usuarioId: usuarioId });
-         // Verificar se um carrinho com o usuário já existe
+        
+        // Verificar se um carrinho com o usuário já existe
         if (!carrinho) {
             // Se não existir deve criar um novo carrinho
             const novoCarrinho: Carrinho = {
@@ -47,7 +53,8 @@ class CarrinhoController {
                     produtoId: LivroId,
                     quantidade: quantidade,
                     precoUnitario: precoUnitario,
-                    nome: nome
+                    nome: nome,
+                    capaUrl: capaUrl // <--- ADICIONE ISSO (Salva no banco)
                 }],
                 dataAtualizacao: new Date(),
                 total: precoUnitario * quantidade
@@ -55,8 +62,10 @@ class CarrinhoController {
             await db.collection("carrinhos").insertOne(novoCarrinho);
             return res.status(201).json(novoCarrinho);
         }
+
         // Se existir, deve adicionar o item ao carrinho existente
         const itemExistente = carrinho.itens.find(item => item.produtoId === LivroId);
+        
         if (itemExistente) {
             // Se o item já existir no carrinho, atualizar a quantidade
             itemExistente.quantidade += quantidade;
@@ -66,9 +75,11 @@ class CarrinhoController {
                 produtoId: LivroId,
                 quantidade: quantidade,
                 precoUnitario: precoUnitario,
-                nome: nome
+                nome: nome,
+                capaUrl: capaUrl // <--- ADICIONE ISSO (Salva no banco ao adicionar novo item)
             });
         }
+        
         // Calcular o total do carrinho
         const total = carrinho.itens.reduce((acc, item) => acc + (item.precoUnitario * item.quantidade), 0);
         carrinho.total = total; 
@@ -84,6 +95,8 @@ class CarrinhoController {
         //Responder com o carrinho atualizado
         return res.status(200).json(carrinho);
     } 
+
+    // ... O RESTO DO ARQUIVO CONTINUA IGUAL (removerItem, atualizarQuantidade, etc) ...
     //removerItem
     async removerItem(req:AutenticacaoRequest, res:Response) {
         // Usuário é obtido a partir do middleware de autenticação
